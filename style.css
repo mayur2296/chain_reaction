@@ -1,0 +1,69 @@
+body{
+	width:100%;
+	background-color: black;
+}
+#back{
+	background-color:#A3A3A3;
+	margin-left:15%;
+	margin-right:15%;
+	padding-bottom:1.2%;
+	
+	padding-top:30px;
+}
+#gameboard{
+	margin:auto;
+	margin-top: -17px;
+	width: 432px;
+    height: 536px;
+	border-color:red;
+	background-color:black;
+	border:8px;
+	box-shadow: -18px 27px 47px 18px #393939;
+	
+}
+
+#gameboard :hover{
+    background-color:#262626;
+}
+
+.divbox{
+	position:relative;
+	border-color: red;
+    float: left;
+    border: 2px solid green;
+    height: 50px;
+    width: 50px;
+	border-radius:6px 6px 6px 6px;
+}
+.divbox2{
+	clear:left;
+}
+
+
+img{
+	position:absolute;
+	left:0px;
+	right:px;
+}
+
+#restart{
+	clear:left;
+	margin:auto;
+	margin-left:45%;
+	margin-top:20px;
+	height:33px;
+	width:103px;
+	background-color:black;
+	color:white;
+	border: 2px solid gray ;
+	border-radius:10px 10px 10px 10px;
+	box-shadow: -7px 3px 33px -4px #070707;
+}
+
+
+#gameover{
+	position: absolute;
+	left: 489px;
+	top: 188px;
+
+}

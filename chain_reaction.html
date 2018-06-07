@@ -1,0 +1,520 @@
+<!DOCTYPE HTML>
+	<head>
+		<title> CHAIN REACTION
+		</title>
+		<meta name="author" content="Mayur Bodji"/>
+		<link rel="stylesheet" href="style.css"/> 
+		<script>
+		"use strict";
+		var rows=10,cols=8;
+		var down=1,right=2,left=4,up=8,turn=0;
+		var player=0;
+		var moveQueue=[];
+		var moveQueuetd=[];
+		var animation_flag=false, audio=null,click_audio=null;
+		function createboard()
+		{
+			var divbox,box;
+			document.getElementById('gameboard').addEventListener('click',clickfunc);
+			audio = document.getElementById("split_audio");
+			//click_audio = document.getElementById("click_audio");
+			for(var i=0;i<rows;i++)
+			{
+				for(var j=0;j<cols;j++)
+				{
+					divbox = document.createElement("div");
+					divbox.mass=0;
+					divbox.direction=0;
+					divbox.classList.add("divbox");
+					divbox.criticalMass=0;
+					divbox.player=-1;
+					if(j==0)
+					{
+						divbox.classList.add("divbox2");
+					}
+					if(i!=0)
+					{
+						divbox.criticalMass++;
+						divbox.direction=divbox.direction | up;
+					}
+					if(j!=0)
+					{
+						divbox.criticalMass++;
+						divbox.direction=divbox.direction | left;
+					}
+					if(j!=cols-1)
+					{
+						divbox.direction=divbox.direction | right;
+						divbox.criticalMass++;
+					}
+					if(i!=rows-1)
+					{
+						divbox.direction=divbox.direction | down;
+						divbox.criticalMass++;
+					}
+					document.getElementById('gameboard').appendChild(divbox);
+				}
+			}
+		}
+		//when user clicks button
+		function clickfunc(event)
+		{			
+			
+			if(!animation_flag)
+			{
+				var can1,attr1,attr2,divbox,ele,loop=52,id;
+				animation_flag=false;
+				if(event.target.tagName=="DIV")
+				{
+					divbox=event.target;
+				}
+				else
+				{
+					divbox=event.target.parentElement;
+				}
+				if(divbox.mass<divbox.criticalMass && (divbox.player==-1 || divbox.player==player))
+				{
+					//click_audio.play();
+					divbox = valid_user_click(divbox);
+					if(animation_flag)
+					{
+						id = window.setInterval(wait_frame,6);
+						loop=52;
+						function wait_frame() 
+						{
+							if (loop == 0) 
+							{
+								window.clearInterval(id);
+								if(moveQueue.length>0 && moveQueuetd.length>0)
+								{
+									start_animation_dual(moveQueue.shift(),moveQueuetd.shift());
+									audio.play();
+								}
+								else if(moveQueue.length>0)
+								{
+										audio.play();
+										start_animation(moveQueue.shift());
+								}
+								else if(moveQueuetd.length>0)
+								{
+										audio.play();
+										start_animation(moveQueuetd.shift());
+								}
+								else
+								{
+									changecolor();
+								}
+							} 
+							else 
+							{
+								loop=loop-1;
+							}
+						}
+					}
+					else
+					{
+						changecolor();
+					}
+				}
+			}
+		}
+		
+		function start_animation_dual(L_R_box, T_D_box)
+		{
+			var audio = document.getElementById("split_audio");
+			valid_user_click(L_R_box);
+			valid_user_click(T_D_box);
+			var id = window.setInterval(frame,6);
+			var loop=52;
+			function frame() 
+			{
+				if (loop == 0) 
+				{
+					window.clearInterval(id);
+					if(moveQueue.length>0 && moveQueuetd.length>0)
+					{
+						start_animation_dual(moveQueue.shift(),moveQueuetd.shift());
+						audio.play();
+					}
+					else if(moveQueue.length>0)
+					{
+							start_animation(moveQueue.shift());
+							audio.play();
+					}
+					else if(moveQueuetd.length>0)
+					{
+							start_animation(moveQueuetd.shift());
+							audio.play();
+					}
+					else
+					{
+						changecolor();
+					}
+				} 
+				else 
+				{
+					loop=loop-1;
+				}
+			}
+		}
+		function start_animation(movebox)
+		{
+			var audio = document.getElementById("split_audio");
+			var id = window.setInterval(frame,6);
+			var loop=52;
+			var flag=0;
+			valid_user_click(movebox);
+			function frame() 
+			{
+				if (loop == 0) 
+				{
+					window.clearInterval(id);
+					if(moveQueue.length>0 && moveQueuetd.length>0)
+					{
+						start_animation_dual(moveQueue.shift(),moveQueuetd.shift());
+						audio.play();
+					}
+					else if(moveQueue.length>0)
+					{
+						start_animation(moveQueue.shift());
+						audio.play();
+					}
+					else if(moveQueuetd.length>0)
+					{
+						start_animation(moveQueuetd.shift());
+						audio.play();
+					}
+					else
+					{
+						changecolor();
+					}
+				} 
+				else 
+				{
+				loop=loop-1;
+				}
+			}
+		}
+		
+		function removeImage(divbox)
+		{
+			var ele;
+			ele=divbox.children;
+			divbox.removeChild(ele[0]);
+			return divbox;
+		}
+		
+		
+		function valid_user_click(divbox)
+		{
+			var ele;
+			if(divbox.mass>=divbox.criticalMass-1)
+			{
+				divbox.innerHTML="";
+				divbox.mass=0;
+				divbox.player=-1;
+				audio.play();
+				move_valid_direction(divbox);
+				animation_flag=true;
+			}
+			else
+			{
+				checkmass(divbox);
+			}
+			return divbox;
+		}
+		//adding image1 with single cube
+		function massOneImage(divbox)
+		{
+			var imgelement;
+			imgelement=createImgElement();
+			divbox.appendChild(imgelement);
+			divbox.mass++;
+			divbox.player=player;
+		}
+		
+		function massTwoImage(divbox)
+		{
+			if(player==0)
+			{
+				divbox.getElementsByTagName('img')[0].setAttribute("src", "resources/Obj-0-2.gif");
+			}
+			else
+			{
+				divbox.getElementsByTagName('img')[0].setAttribute("src", "resources/Obj-1-2.gif");
+			}
+			divbox.mass++;
+			divbox.player=player;
+		}
+		
+		function massThreeImage(divbox)
+		{
+			if(player==0)
+			{
+				divbox.getElementsByTagName('img')[0].setAttribute("src", "resources/Obj-0-3.gif");
+			}
+			else
+			{
+				divbox.getElementsByTagName('img')[0].setAttribute("src", "resources/Obj-1-3.gif");
+			}
+			divbox.mass++;
+			divbox.player=player;
+		}
+		//move according to direction
+		function move_valid_direction(divbox)
+		{
+			switch(divbox.direction)
+			{
+				case 3:move(divbox,right);
+					   move(divbox,down);
+				break;
+				case 5:move(divbox,left);
+						move(divbox,down);
+				break;
+				case 12:move(divbox,up);
+						move(divbox,left);
+				break;
+				case 15:move(divbox,left);
+						move(divbox,up);
+						move(divbox,right);
+						move(divbox,down);
+				break;
+				case 10:move(divbox,up);
+						move(divbox,right);
+				break;
+				case 11:move(divbox,up);
+						move(divbox,right);
+						move(divbox,down);
+				break;
+				case 13:move(divbox,up);
+						move(divbox,left);
+						move(divbox,down);
+				break;
+				case 7:move(divbox,right);
+						move(divbox,left);
+						move(divbox,down);
+				break;
+				case 14:move(divbox,up);
+						move(divbox,left);
+						move(divbox,right);
+				break;
+				default :
+				break;
+			}
+		}
+
+		function checkmass(boxx)
+		{
+			if(boxx.mass==0)
+			{
+				massOneImage(boxx);
+			}
+				else if(boxx.mass==1)
+			{
+				massTwoImage(boxx);
+			}
+			else if(boxx.mass==2)
+			{
+				massThreeImage(boxx);
+			}	
+		}
+		
+		function createImgElement()
+		{
+			var imgelement,attr2;
+			var attribute=document.createAttribute("src");
+			if(player==0)
+			{
+				attribute.value="resources/Obj-0-1.gif";
+			}
+			else
+			{
+				attribute.value="resources/Obj-1-1.gif";
+			}
+			imgelement = document.createElement("img");
+			imgelement.setAttributeNode(attribute);
+			return imgelement;
+		}
+		function changecolor()
+		{
+			var child,ch;
+			child=document.getElementById('gameboard').children;
+			for(ch=0;ch<child.length;ch++)
+			{
+				if(player==0)
+				{
+					child[ch].style.borderColor = "pink";
+				}
+				else{
+					child[ch].style.borderColor = "green";
+				}
+			}
+			if(player==0)
+			{
+				player=1;
+			}
+			else
+			{
+				player=0;
+			}
+			if(turn>1)
+			{
+				if(winner())
+				{
+					for(ch=0;ch<child.length;ch++)
+					{
+						if(player==0)
+						{
+							child[ch].style.borderColor = "pink";
+						}
+						else{
+							child[ch].style.borderColor = "green";
+						}
+					}
+				}
+			}
+			turn++;
+			animation_flag=false;
+		}
+		
+		function move(box,position)
+		{
+			var targettbox,pos = 0,imgele,id,px=1;
+			switch(position)
+			{
+				case 1: px=1;
+						targettbox=		       box.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling.nextSibling;
+						box=create_Animation_Image(box,'imgdown');
+						imgele=box.getElementsByClassName('imgdown')[0];
+						break;
+						
+				case 2:targettbox=box.nextSibling;
+					   box=create_Animation_Image(box,'imgright');
+					   imgele=box.getElementsByClassName('imgright')[0];
+					   break;
+					   
+				case 4: px=-1;
+						targettbox=box.previousSibling;
+						box=create_Animation_Image(box,'imgleft');
+						imgele=box.getElementsByClassName('imgleft')[0];
+						break;
+				case 8: px=-1;
+						targettbox=box.previousSibling.previousSibling.previousSibling.previousSibling.previousSibling.previousSibling.previousSibling.previousSibling;
+						box=create_Animation_Image(box,'imgtop');
+						imgele=box.getElementsByClassName('imgtop')[0];
+						break;
+						
+						default: break;
+			}
+			imgele.style.left = pos + 'px';
+			id = window.setInterval(frame, 1);
+			function frame() 
+			{
+				if (pos == 52 || pos==-52) 
+				{
+					window.clearInterval(id);
+					box.removeChild(imgele);
+					if(targettbox.mass>=targettbox.criticalMass-1)
+					{
+						if(!moveQueue.includes(targettbox) && (position==1 || position==2))
+						{
+							moveQueue.push(targettbox);
+						}
+						else if(!moveQueuetd.includes(targettbox) && (position==4 || position==8))
+						{
+							moveQueuetd.push(targettbox);
+						}
+					}
+					else
+					{
+						checkmass(targettbox);
+					}
+				} 
+				else 
+				{
+					if(position==2 || position==4)
+					{
+						pos=pos+px;
+						imgele.style.left = pos + 'px';
+					}
+					else
+					{
+						pos=pos+px;
+						imgele.style.top = pos + 'px';
+					}
+					
+				}
+			}
+		}
+		function winner()
+		{
+			var child,ch,player1=0,player2=0;
+			var attribute,gameoverimage,attribute2,attribute3;
+			child=document.getElementById('gameboard').children;
+			for(ch=0;ch<child.length;ch++)
+			{
+				if(child[ch].player==0)
+				{
+					player1=1;
+				}
+				else if(child[ch].player==1)
+				{
+					player2=1;
+				}
+			}
+			if(player1==1 && player2==1)
+			{
+				return false;
+			}
+			else
+			{
+				document.getElementById('gameboard').removeEventListener('click',clickfunc);
+				attribute=document.createAttribute("src");
+				attribute.value="resources/game-over.png";
+				attribute2=document.createAttribute("id");
+				attribute2.value="gameover";
+				gameoverimage = document.createElement("img");
+				gameoverimage.setAttributeNode(attribute);
+				gameoverimage.setAttributeNode(attribute2);
+				document.body.appendChild(gameoverimage);
+				return true;
+			}
+			return false;
+		}
+		function restart()
+		{
+			window.location.reload(true);
+		}
+		function create_Animation_Image(divbox,direction)
+		{
+			var imgelement,attribute;
+			imgelement=createImgElement();
+			attribute=document.createAttribute("class");
+			attribute.value=""+direction;
+			imgelement.setAttributeNode(attribute);
+			divbox.appendChild(imgelement);
+			return divbox;
+		}
+		</script>
+	</head>
+	<body onload="createboard()">
+	<div id="back">
+		<div id="gameboard">
+		</div>
+		<input type="button" id="restart" value="RESTART" onclick="restart()"/>
+	</div>
+		<audio id="split_audio">
+		<source src="resources/splitaudio.wav" type="audio/wav">
+		</audio>
+	</body>
+</html>
+
+
+
+
+
+
+
+
+
+
